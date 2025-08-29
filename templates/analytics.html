@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SnifTern.ai - Analytics Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .analytics-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .analytics-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .analytics-header h1 {
+            color: #4ecdc4;
+            margin-bottom: 10px;
+        }
+        
+        .analytics-header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+        }
+        
+        .metric-card h3 {
+            margin: 0 0 10px 0;
+            font-size: 1.2em;
+        }
+        
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        
+        .metric-label {
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+        
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .chart-title {
+            font-size: 1.3em;
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        
+        .insights-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        
+        .insights-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .insight-item {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4ecdc4;
+        }
+        
+        .insight-item h4 {
+            margin: 0 0 8px 0;
+            color: #333;
+        }
+        
+        .insight-item p {
+            margin: 0;
+            color: #666;
+        }
+        
+        .alerts-section {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .alert-item {
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .alert-item h4 {
+            margin: 0 0 8px 0;
+        }
+        
+        .alert-item p {
+            margin: 0;
+            opacity: 0.9;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #666;
+        }
+        
+        .error {
+            background: #ff6b6b;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .refresh-btn {
+            background: #4ecdc4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-bottom: 20px;
+        }
+        
+        .refresh-btn:hover {
+            background: #45b7d1;
+        }
+        
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="analytics-container">
+        <div class="analytics-header">
+            <h1>📊 SnifTern.ai Analytics Dashboard</h1>
+            <p>Real-time insights into job fraud patterns and market intelligence</p>
+            <button class="refresh-btn" onclick="loadAnalytics()">🔄 Refresh Data</button>
+        </div>
+        
+        <div id="loading" class="loading">
+            <h3>Loading analytics data...</h3>
+            <p>Please wait while we gather the latest insights.</p>
+        </div>
+        
+        <div id="error" class="error" style="display: none;"></div>
+        
+        <div id="analytics-content" style="display: none;">
+            <!-- Summary Metrics -->
+            <div class="metrics-grid" id="metrics-grid">
+                <!-- Metrics will be populated here -->
+            </div>
+            
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-title">📈 Fraud Trends Over Time</div>
+                    <canvas id="fraudTrendChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-title">🏭 Industry Fraud Rates</div>
+                    <canvas id="industryChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Market Intelligence -->
+            <div class="insights-section">
+                <div class="insights-title">🔍 Market Intelligence Insights</div>
+                <div id="market-insights">
+                    <!-- Market insights will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Alerts -->
+            <div class="alerts-section" id="alerts-section" style="display: none;">
+                <div class="insights-title">🚨 Real-Time Alerts</div>
+                <div id="alerts-content">
+                    <!-- Alerts will be populated here -->
+                </div>
+            </div>
+            
+            <!-- Recommendations -->
+            <div class="insights-section">
+                <div class="insights-title">💡 Recommendations</div>
+                <div id="recommendations">
+                    <!-- Recommendations will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let fraudTrendChart, industryChart;
+        
+        // Load analytics data when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAnalytics();
+        });
+        
+        async function loadAnalytics() {
+            const loading = document.getElementById('loading');
+            const content = document.getElementById('analytics-content');
+            const error = document.getElementById('error');
+            
+            loading.style.display = 'block';
+            content.style.display = 'none';
+            error.style.display = 'none';
+            
+            try {
+                // Load dashboard data
+                const dashboardResponse = await fetch('/api/analytics/dashboard');
+                const dashboardData = await dashboardResponse.json();
+                
+                if (!dashboardData.success) {
+                    throw new Error(dashboardData.error || 'Failed to load dashboard data');
+                }
+                
+                // Load market intelligence
+                const marketResponse = await fetch('/api/analytics/market-intelligence');
+                const marketData = await marketResponse.json();
+                
+                if (!marketData.success) {
+                    throw new Error(marketData.error || 'Failed to load market intelligence');
+                }
+                
+                // Display the data
+                displayMetrics(dashboardData.dashboard_data.summary_metrics);
+                displayCharts(dashboardData.visualizations);
+                displayMarketInsights(marketData.market_intelligence);
+                displayAlerts(marketData.alerts);
+                displayRecommendations(dashboardData.dashboard_data.recommendations);
+                
+                loading.style.display = 'none';
+                content.style.display = 'block';
+                
+            } catch (err) {
+                loading.style.display = 'none';
+                error.style.display = 'block';
+                error.textContent = 'Error loading analytics: ' + err.message;
+            }
+        }
+        
+        function displayMetrics(metrics) {
+            const metricsGrid = document.getElementById('metrics-grid');
+            
+            if (!metrics || Object.keys(metrics).length === 0) {
+                metricsGrid.innerHTML = '<div class="metric-card"><h3>No Data Available</h3><p>Start analyzing jobs to see metrics</p></div>';
+                return;
+            }
+            
+            const metricsHTML = `
+                <div class="metric-card">
+                    <h3>Total Analyses</h3>
+                    <div class="metric-value">${metrics.total_analyses || 0}</div>
+                    <div class="metric-label">Jobs analyzed</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Fraud Detected</h3>
+                    <div class="metric-value">${metrics.fraud_detected || 0}</div>
+                    <div class="metric-label">Fake jobs found</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Fraud Rate</h3>
+                    <div class="metric-value">${metrics.fraud_rate_percentage || 0}%</div>
+                    <div class="metric-label">Percentage of fake jobs</div>
+                </div>
+                <div class="metric-card">
+                    <h3>Avg Confidence</h3>
+                    <div class="metric-value">${metrics.average_confidence_score || 0}%</div>
+                    <div class="metric-label">Detection confidence</div>
+                </div>
+            `;
+            
+            metricsGrid.innerHTML = metricsHTML;
+        }
+        
+        function displayCharts(visualizations) {
+            // Fraud trend chart
+            if (visualizations.fraud_trend_chart) {
+                const fraudCtx = document.getElementById('fraudTrendChart').getContext('2d');
+                if (fraudTrendChart) fraudTrendChart.destroy();
+                
+                fraudTrendChart = new Chart(fraudCtx, {
+                    type: 'line',
+                    data: {
+                        labels: visualizations.fraud_trend_chart.data.labels,
+                        datasets: [{
+                            label: 'Daily Fraud Rate (%)',
+                            data: visualizations.fraud_trend_chart.data.datasets[0].data,
+                            borderColor: '#ff6b6b',
+                            backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // Industry chart
+            if (visualizations.industry_chart) {
+                const industryCtx = document.getElementById('industryChart').getContext('2d');
+                if (industryChart) industryChart.destroy();
+                
+                industryChart = new Chart(industryCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: visualizations.industry_chart.data.labels,
+                        datasets: [{
+                            label: 'Fraud Rate (%)',
+                            data: visualizations.industry_chart.data.datasets[0].data,
+                            backgroundColor: visualizations.industry_chart.data.datasets[0].backgroundColor
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 100
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function displayMarketInsights(marketIntelligence) {
+            const insightsDiv = document.getElementById('market-insights');
+            
+            if (!marketIntelligence || !marketIntelligence.summary) {
+                insightsDiv.innerHTML = '<p>No market intelligence data available yet.</p>';
+                return;
+            }
+            
+            const summary = marketIntelligence.summary;
+            const insightsHTML = `
+                <div class="insight-item">
+                    <h4>📊 Overall Market Health</h4>
+                    <p>Total jobs analyzed: ${summary.total_jobs_analyzed || 0} | Fraud rate: ${summary.fraud_rate_percentage || 0}%</p>
+                </div>
+                <div class="insight-item">
+                    <h4>🏭 High-Risk Industries</h4>
+                    <p>${summary.high_risk_industries && summary.high_risk_industries.length > 0 ? 
+                        summary.high_risk_industries.join(', ') : 'None detected'}</p>
+                </div>
+                <div class="insight-item">
+                    <h4>📍 High-Risk Locations</h4>
+                    <p>${summary.high_risk_locations && summary.high_risk_locations.length > 0 ? 
+                        summary.high_risk_locations.join(', ') : 'None detected'}</p>
+                </div>
+                <div class="insight-item">
+                    <h4>🔍 Critical Threats</h4>
+                    <p>${summary.critical_threats || 0} new high-risk fraud patterns detected</p>
+                </div>
+            `;
+            
+            insightsDiv.innerHTML = insightsHTML;
+        }
+        
+        function displayAlerts(alerts) {
+            const alertsSection = document.getElementById('alerts-section');
+            const alertsContent = document.getElementById('alerts-content');
+            
+            if (!alerts || alerts.length === 0) {
+                alertsSection.style.display = 'none';
+                return;
+            }
+            
+            alertsSection.style.display = 'block';
+            
+            const alertsHTML = alerts.map(alert => `
+                <div class="alert-item">
+                    <h4>${alert.severity}: ${alert.message}</h4>
+                    <p>${alert.recommendation}</p>
+                </div>
+            `).join('');
+            
+            alertsContent.innerHTML = alertsHTML;
+        }
+        
+        function displayRecommendations(recommendations) {
+            const recommendationsDiv = document.getElementById('recommendations');
+            
+            if (!recommendations || recommendations.length === 0) {
+                recommendationsDiv.innerHTML = '<p>No specific recommendations at this time.</p>';
+                return;
+            }
+            
+            const recommendationsHTML = recommendations.map(rec => `
+                <div class="insight-item">
+                    <p>${rec}</p>
+                </div>
+            `).join('');
+            
+            recommendationsDiv.innerHTML = recommendationsHTML;
+        }
+    </script>
+</body>
+</html> 

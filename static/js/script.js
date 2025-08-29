@@ -173,7 +173,7 @@ function displayJobResults(data, extractedText = null) {
     const resultContent = document.getElementById('result-content');
     const aiAnalysisDiv = document.getElementById('ai-analysis');
     
-    const isFake = data.result.includes('FAKE');
+    const isFake = data.result && typeof data.result === 'string' && data.result.includes('FAKE');
     const resultClass = isFake ? 'fake' : 'real';
     const resultIcon = isFake ? 'fas fa-times-circle' : 'fas fa-check-circle';
     const iconClass = isFake ? 'fake' : 'real';
@@ -183,8 +183,8 @@ function displayJobResults(data, extractedText = null) {
             <div class="result-header">
                 <i class="result-icon ${iconClass} ${resultIcon}"></i>
                 <div>
-                    <div class="result-title">${data.result}</div>
-                    <div class="result-confidence">Confidence: ${data.confidence_score}%</div>
+                    <div class="result-title">${data.result || 'Unknown'}</div>
+                    <div class="result-confidence">Confidence: ${Math.min(100, Math.max(0, data.confidence_score || 0)).toFixed(1)}%</div>
                 </div>
             </div>
             
@@ -523,7 +523,7 @@ function displayIntegrationResults(data, platform, extractedText = null) {
     const resultContent = document.getElementById('integration-content');
     const aiAnalysisDiv = document.getElementById('ai-analysis');
     
-    const isFake = data.result.includes('FAKE');
+    const isFake = data.result && typeof data.result === 'string' && data.result.includes('FAKE');
     const resultClass = isFake ? 'fake' : 'real';
     const resultIcon = isFake ? 'fas fa-times-circle' : 'fas fa-check-circle';
     const iconClass = isFake ? 'fake' : 'real';
@@ -533,8 +533,8 @@ function displayIntegrationResults(data, platform, extractedText = null) {
             <div class="result-header">
                 <i class="result-icon ${iconClass} ${resultIcon}"></i>
                 <div>
-                    <div class="result-title">${data.result} (${platform})</div>
-                    <div class="result-confidence">Confidence: ${data.confidence_score}%</div>
+                    <div class="result-title">${data.result || 'Unknown'} (${platform})</div>
+                    <div class="result-confidence">Confidence: ${Math.min(100, Math.max(0, data.confidence_score || 0)).toFixed(1)}%</div>
                 </div>
             </div>
             
@@ -630,7 +630,7 @@ async function exportPDF() {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `jobguardian_report_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.pdf`;
+            a.download = `sniftern_analysis_report_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.pdf`;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);

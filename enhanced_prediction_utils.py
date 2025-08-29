@@ -137,7 +137,7 @@ class EnhancedFakeInternshipPredictor:
             
             # If strong pattern matches, classify as fake
             if pattern_fake and confidence_boost >= 30:
-                return 1, 85 + confidence_boost, True, pattern_matches
+                return 1, min(100, 85 + confidence_boost), True, pattern_matches
             
             # Vectorize the text
             text_vector = self.vectorizer.transform([processed_text])
@@ -166,7 +166,11 @@ class EnhancedFakeInternshipPredictor:
                     if confidence_boost >= 20:
                         is_fake = True
                         prediction = 1
-            
+                        confidence_score = min(100, confidence_score + confidence_boost)
+
+            # Final safety check to ensure confidence_score is within bounds
+            confidence_score = min(100, max(0, confidence_score))
+
             return prediction, confidence_score, is_fake, pattern_matches
             
         except Exception as e:
@@ -189,6 +193,37 @@ class EnhancedFakeInternshipPredictor:
             result = "Likely REAL ✅"
         
         return result, confidence_score, "❌" if is_fake else "✅", pattern_matches
+
+    def enhanced_predict(self, text, threshold=0.4):
+        """
+        Enhanced prediction method that returns a dictionary format
+        Returns: dict with result, confidence_score, word_count, pattern_matches
+        """
+        prediction, confidence_score, is_fake, pattern_matches = self.predict(text, threshold)
+
+        if prediction is None:
+            return {
+                'result': "Error",
+                'confidence_score': 0,
+                'word_count': 0,
+                'pattern_matches': []
+            }
+
+        # Determine result text
+        if is_fake and confidence_score > (threshold * 100):
+            result_text = "Likely FAKE ❌"
+        else:
+            result_text = "Likely REAL ✅"
+
+        # Ensure confidence_score is capped at 100%
+        confidence_score = min(100, max(0, confidence_score))
+
+        return {
+            'result': result_text,
+            'confidence_score': round(confidence_score, 1),
+            'word_count': len(text.split()),
+            'pattern_matches': pattern_matches
+        }
 
     def analyze_salary_range(self, text):
         """Analyze salary ranges for unrealistic promises"""

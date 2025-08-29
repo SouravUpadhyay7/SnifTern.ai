@@ -15,19 +15,30 @@ import requests
 from bs4 import BeautifulSoup
 import re
 
+# Import the new analytics modules
+from analytics_dashboard import AnalyticsDashboard
+from market_intelligence import JobMarketIntelligence, RealTimeAlertSystem
+from blockchain_verification import BlockchainVerification
+
 app = Flask(__name__)
 app.secret_key = 'your-secret-key-here'
 
 # Initialize enhanced predictor
 predictor = EnhancedFakeInternshipPredictor()
 
+# Initialize analytics components
+analytics_dashboard = AnalyticsDashboard()
+market_intelligence = JobMarketIntelligence()
+alert_system = RealTimeAlertSystem()
+blockchain_verifier = BlockchainVerification()
+
 # Enhanced company database with more comprehensive information
 ENHANCED_COMPANY_DATABASE = {
     # Fraudulent Companies
     "fakecorp": {
-        "name": "FakeCorp Inc", 
-        "fraud_score": 95, 
-        "reports": 150, 
+        "name": "FakeCorp Inc",
+        "fraud_score": 95,
+        "reports": 150,
         "last_updated": "2024-01-15",
         "domain_age": "2 months",
         "social_media": "Limited/None",
@@ -38,9 +49,9 @@ ENHANCED_COMPANY_DATABASE = {
         "red_flags": ["No physical address", "Fake testimonials", "Payment required upfront"]
     },
     "scamtech": {
-        "name": "ScamTech Solutions", 
-        "fraud_score": 88, 
-        "reports": 89, 
+        "name": "ScamTech Solutions",
+        "fraud_score": 88,
+        "reports": 89,
         "last_updated": "2024-01-10",
         "domain_age": "3 months",
         "social_media": "None",
@@ -51,9 +62,9 @@ ENHANCED_COMPANY_DATABASE = {
         "red_flags": ["Virtual office only", "No employee reviews", "Suspicious payment methods"]
     },
     "phishco": {
-        "name": "PhishCo Ltd", 
-        "fraud_score": 92, 
-        "reports": 234, 
+        "name": "PhishCo Ltd",
+        "fraud_score": 92,
+        "reports": 234,
         "last_updated": "2024-01-12",
         "domain_age": "1 month",
         "social_media": "Fake profiles",
@@ -63,12 +74,233 @@ ENHANCED_COMPANY_DATABASE = {
         "website": "phishco-scam.org",
         "red_flags": ["International scam", "Fake social media", "Data harvesting"]
     },
-    
+    "certscam": {
+        "name": "CertScam Academy",
+        "fraud_score": 98,
+        "reports": 445,
+        "last_updated": "2024-01-25",
+        "domain_age": "1 month",
+        "social_media": "None",
+        "contact_verification": "Failed",
+        "industry": "Education",
+        "location": "Unknown",
+        "website": "certscam-academy.biz",
+        "red_flags": ["Certificate payment scam", "Fake credentials", "No accreditation"]
+    },
+    "workfromhomescam": {
+        "name": "WorkFromHome Solutions",
+        "fraud_score": 93,
+        "reports": 267,
+        "last_updated": "2024-01-19",
+        "domain_age": "6 weeks",
+        "social_media": "Fake profiles",
+        "contact_verification": "Failed",
+        "industry": "Remote Work",
+        "location": "Virtual",
+        "website": "workfromhome-scam.net",
+        "red_flags": ["Work from home scam", "Upfront payments", "Fake testimonials"]
+    },
+    "fastmoney": {
+        "name": "FastMoney Opportunities",
+        "fraud_score": 96,
+        "reports": 389,
+        "last_updated": "2024-01-21",
+        "domain_age": "3 weeks",
+        "social_media": "None",
+        "contact_verification": "Failed",
+        "industry": "Financial",
+        "location": "Unknown",
+        "website": "fastmoney-scam.org",
+        "red_flags": ["Get rich quick scheme", "No legitimate business", "Payment required"]
+    },
+    "internshipscam": {
+        "name": "Internship Masters",
+        "fraud_score": 90,
+        "reports": 198,
+        "last_updated": "2024-01-17",
+        "domain_age": "2 months",
+        "social_media": "Limited",
+        "contact_verification": "Failed",
+        "industry": "Education",
+        "location": "Virtual",
+        "website": "internshipmasters-fake.com",
+        "red_flags": ["Fake internship certificates", "Payment for placement", "No real mentorship"]
+    },
+    "digitaldreams": {
+        "name": "Digital Dreams Corp",
+        "fraud_score": 87,
+        "reports": 134,
+        "last_updated": "2024-01-13",
+        "domain_age": "4 months",
+        "social_media": "Fake",
+        "contact_verification": "Failed",
+        "industry": "Digital Marketing",
+        "location": "Unknown",
+        "website": "digitaldreams-scam.biz",
+        "red_flags": ["Virtual company", "No real clients", "Suspicious payment methods"]
+    },
+    "onlinescamjobs": {
+        "name": "Online Jobs Hub",
+        "fraud_score": 94,
+        "reports": 356,
+        "last_updated": "2024-01-23",
+        "domain_age": "2 weeks",
+        "social_media": "None",
+        "contact_verification": "Failed",
+        "industry": "Job Portal",
+        "location": "Unknown",
+        "website": "onlinejobshub-scam.com",
+        "red_flags": ["Registration fees", "Fake job listings", "No legitimate employers"]
+    },
+    "homebasedwork": {
+        "name": "HomeBased Work Solutions",
+        "fraud_score": 92,
+        "reports": 223,
+        "last_updated": "2024-01-20",
+        "domain_age": "5 weeks",
+        "social_media": "Fake",
+        "contact_verification": "Failed",
+        "industry": "Remote Work",
+        "location": "Virtual",
+        "website": "homebasedwork-scam.org",
+        "red_flags": ["Work from home scam", "Equipment fees", "No real work provided"]
+    },
+    "dataentryscam": {
+        "name": "DataEntry Masters",
+        "fraud_score": 89,
+        "reports": 178,
+        "last_updated": "2024-01-18",
+        "domain_age": "3 months",
+        "social_media": "Limited",
+        "contact_verification": "Failed",
+        "industry": "Data Processing",
+        "location": "Unknown",
+        "website": "dataentrymasters-fake.net",
+        "red_flags": ["Data entry scam", "Training fees", "No legitimate clients"]
+    },
+    "mlmscam": {
+        "name": "MLM Success Network",
+        "fraud_score": 95,
+        "reports": 412,
+        "last_updated": "2024-01-24",
+        "domain_age": "4 weeks",
+        "social_media": "Fake profiles",
+        "contact_verification": "Failed",
+        "industry": "Marketing",
+        "location": "Virtual",
+        "website": "mlmsuccess-scam.biz",
+        "red_flags": ["MLM pyramid scheme", "Recruitment fees", "Fake income promises"]
+    },
+    "surveyscam": {
+        "name": "Survey Rewards Pro",
+        "fraud_score": 91,
+        "reports": 234,
+        "last_updated": "2024-01-16",
+        "domain_age": "2 months",
+        "social_media": "None",
+        "contact_verification": "Failed",
+        "industry": "Market Research",
+        "location": "Unknown",
+        "website": "surveyrewards-fake.com",
+        "red_flags": ["Survey scam", "Personal data harvesting", "No real rewards"]
+    },
+    "cryptoscam": {
+        "name": "CryptoJobs Global",
+        "fraud_score": 97,
+        "reports": 567,
+        "last_updated": "2024-01-26",
+        "domain_age": "3 weeks",
+        "social_media": "Fake",
+        "contact_verification": "Failed",
+        "industry": "Cryptocurrency",
+        "location": "International",
+        "website": "cryptojobs-scam.org",
+        "red_flags": ["Cryptocurrency scam", "Investment required", "Fake trading platform"]
+    },
+    "tutorscam": {
+        "name": "Online Tutor Academy",
+        "fraud_score": 88,
+        "reports": 145,
+        "last_updated": "2024-01-15",
+        "domain_age": "3 months",
+        "social_media": "Limited",
+        "contact_verification": "Failed",
+        "industry": "Education",
+        "location": "Virtual",
+        "website": "onlinetutor-scam.net",
+        "red_flags": ["Fake tutoring jobs", "Training material fees", "No real students"]
+    },
+    "quickcash": {
+        "name": "QuickCash Enterprises",
+        "fraud_score": 97,
+        "reports": 312,
+        "last_updated": "2024-01-20",
+        "domain_age": "6 weeks",
+        "social_media": "None",
+        "contact_verification": "Failed",
+        "industry": "Financial Services",
+        "location": "Unknown",
+        "website": "quickcash-money.biz",
+        "red_flags": ["Certificate payment required", "Unrealistic salary promises", "No company verification"]
+    },
+    "easyintern": {
+        "name": "EasyIntern Global",
+        "fraud_score": 91,
+        "reports": 187,
+        "last_updated": "2024-01-18",
+        "domain_age": "3 months",
+        "social_media": "Fake profiles",
+        "contact_verification": "Failed",
+        "industry": "Education",
+        "location": "Virtual",
+        "website": "easyintern-fake.org",
+        "red_flags": ["Virtual internships with fees", "No real office", "Fake employee testimonials"]
+    },
+    "instantjobs": {
+        "name": "InstantJobs Pro",
+        "fraud_score": 89,
+        "reports": 156,
+        "last_updated": "2024-01-16",
+        "domain_age": "2 months",
+        "social_media": "Limited",
+        "contact_verification": "Failed",
+        "industry": "Recruitment",
+        "location": "Unknown",
+        "website": "instantjobs-scam.net",
+        "red_flags": ["Immediate hiring promises", "No interview process", "Payment for job placement"]
+    },
+    "dreamcareers": {
+        "name": "Dream Careers Ltd",
+        "fraud_score": 94,
+        "reports": 278,
+        "last_updated": "2024-01-22",
+        "domain_age": "5 weeks",
+        "social_media": "None",
+        "contact_verification": "Failed",
+        "industry": "Career Services",
+        "location": "International",
+        "website": "dreamcareers-fake.com",
+        "red_flags": ["Certificate fees", "Work from home scam", "No legitimate contact info"]
+    },
+    "globalinternships": {
+        "name": "Global Internships Inc",
+        "fraud_score": 86,
+        "reports": 143,
+        "last_updated": "2024-01-14",
+        "domain_age": "4 months",
+        "social_media": "Fake",
+        "contact_verification": "Failed",
+        "industry": "Education",
+        "location": "Virtual",
+        "website": "globalinternships-scam.org",
+        "red_flags": ["International internship scam", "Payment required", "No physical presence"]
+    },
+
     # Legitimate Companies
     "google": {
-        "name": "Google", 
-        "fraud_score": 5, 
-        "reports": 2, 
+        "name": "Google",
+        "fraud_score": 5,
+        "reports": 2,
         "last_updated": "2024-01-15",
         "domain_age": "25+ years",
         "social_media": "Extensive presence",
@@ -79,9 +311,9 @@ ENHANCED_COMPANY_DATABASE = {
         "green_flags": ["Established company", "Verified contact info", "Positive reviews"]
     },
     "microsoft": {
-        "name": "Microsoft", 
-        "fraud_score": 3, 
-        "reports": 1, 
+        "name": "Microsoft",
+        "fraud_score": 3,
+        "reports": 1,
         "last_updated": "2024-01-15",
         "domain_age": "30+ years",
         "social_media": "Extensive presence",
@@ -92,9 +324,9 @@ ENHANCED_COMPANY_DATABASE = {
         "green_flags": ["Fortune 500 company", "Verified contact info", "Excellent reputation"]
     },
     "amazon": {
-        "name": "Amazon", 
-        "fraud_score": 6, 
-        "reports": 5, 
+        "name": "Amazon",
+        "fraud_score": 6,
+        "reports": 5,
         "last_updated": "2024-01-15",
         "domain_age": "25+ years",
         "social_media": "Extensive presence",
@@ -103,13 +335,364 @@ ENHANCED_COMPANY_DATABASE = {
         "location": "Seattle, WA",
         "website": "amazon.com",
         "green_flags": ["Global company", "Verified contact info", "Established reputation"]
+    },
+    "apple": {
+        "name": "Apple Inc",
+        "fraud_score": 4,
+        "reports": 1,
+        "last_updated": "2024-01-15",
+        "domain_age": "30+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Technology",
+        "location": "Cupertino, CA",
+        "website": "apple.com",
+        "green_flags": ["Fortune 500 company", "Global brand", "Excellent employee reviews"]
+    },
+    "meta": {
+        "name": "Meta (Facebook)",
+        "fraud_score": 7,
+        "reports": 3,
+        "last_updated": "2024-01-15",
+        "domain_age": "20+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Technology",
+        "location": "Menlo Park, CA",
+        "website": "meta.com",
+        "green_flags": ["Major tech company", "Verified offices", "Strong online presence"]
+    },
+    "netflix": {
+        "name": "Netflix",
+        "fraud_score": 8,
+        "reports": 4,
+        "last_updated": "2024-01-15",
+        "domain_age": "25+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Entertainment",
+        "location": "Los Gatos, CA",
+        "website": "netflix.com",
+        "green_flags": ["Global streaming leader", "Public company", "Verified offices worldwide"]
+    },
+    "tesla": {
+        "name": "Tesla Inc",
+        "fraud_score": 9,
+        "reports": 6,
+        "last_updated": "2024-01-15",
+        "domain_age": "20+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Automotive",
+        "location": "Austin, TX",
+        "website": "tesla.com",
+        "green_flags": ["Public company", "Global manufacturing", "Innovative technology leader"]
+    },
+    "spotify": {
+        "name": "Spotify",
+        "fraud_score": 7,
+        "reports": 2,
+        "last_updated": "2024-01-15",
+        "domain_age": "15+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Music/Technology",
+        "location": "Stockholm, Sweden",
+        "website": "spotify.com",
+        "green_flags": ["Public company", "Global music platform", "Strong brand recognition"]
+    },
+    "uber": {
+        "name": "Uber Technologies",
+        "fraud_score": 12,
+        "reports": 8,
+        "last_updated": "2024-01-15",
+        "domain_age": "15+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Transportation",
+        "location": "San Francisco, CA",
+        "website": "uber.com",
+        "green_flags": ["Public company", "Global operations", "Established platform"]
+    },
+    "airbnb": {
+        "name": "Airbnb Inc",
+        "fraud_score": 10,
+        "reports": 7,
+        "last_updated": "2024-01-15",
+        "domain_age": "15+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Hospitality",
+        "location": "San Francisco, CA",
+        "website": "airbnb.com",
+        "green_flags": ["Public company", "Global platform", "Verified business model"]
+    },
+    "salesforce": {
+        "name": "Salesforce",
+        "fraud_score": 5,
+        "reports": 1,
+        "last_updated": "2024-01-15",
+        "domain_age": "25+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Software",
+        "location": "San Francisco, CA",
+        "website": "salesforce.com",
+        "green_flags": ["Fortune 500 company", "CRM leader", "Strong corporate reputation"]
+    },
+    "adobe": {
+        "name": "Adobe Inc",
+        "fraud_score": 6,
+        "reports": 2,
+        "last_updated": "2024-01-15",
+        "domain_age": "30+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Software",
+        "location": "San Jose, CA",
+        "website": "adobe.com",
+        "green_flags": ["Creative software leader", "Public company", "Global presence"]
+    },
+    "ibm": {
+        "name": "IBM",
+        "fraud_score": 4,
+        "reports": 1,
+        "last_updated": "2024-01-15",
+        "domain_age": "30+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Technology",
+        "location": "Armonk, NY",
+        "website": "ibm.com",
+        "green_flags": ["Century-old company", "Global technology leader", "Strong corporate governance"]
+    },
+    "oracle": {
+        "name": "Oracle Corporation",
+        "fraud_score": 5,
+        "reports": 2,
+        "last_updated": "2024-01-15",
+        "domain_age": "25+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Software",
+        "location": "Austin, TX",
+        "website": "oracle.com",
+        "green_flags": ["Database technology leader", "Fortune 500", "Global enterprise solutions"]
+    },
+    "intel": {
+        "name": "Intel Corporation",
+        "fraud_score": 6,
+        "reports": 3,
+        "last_updated": "2024-01-15",
+        "domain_age": "30+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Semiconductors",
+        "location": "Santa Clara, CA",
+        "website": "intel.com",
+        "green_flags": ["Semiconductor leader", "Public company", "Global manufacturing"]
+    },
+    "nvidia": {
+        "name": "NVIDIA Corporation",
+        "fraud_score": 7,
+        "reports": 2,
+        "last_updated": "2024-01-15",
+        "domain_age": "30+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Technology",
+        "location": "Santa Clara, CA",
+        "website": "nvidia.com",
+        "green_flags": ["AI technology leader", "Public company", "Innovation leader"]
+    },
+    "linkedin": {
+        "name": "LinkedIn Corporation",
+        "fraud_score": 8,
+        "reports": 4,
+        "last_updated": "2024-01-15",
+        "domain_age": "20+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Professional Network",
+        "location": "Sunnyvale, CA",
+        "website": "linkedin.com",
+        "green_flags": ["Professional networking leader", "Microsoft subsidiary", "Verified platform"]
+    },
+    "tcs": {
+        "name": "Tata Consultancy Services",
+        "fraud_score": 5,
+        "reports": 2,
+        "last_updated": "2024-01-15",
+        "domain_age": "25+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "IT Services",
+        "location": "Mumbai, India",
+        "website": "tcs.com",
+        "green_flags": ["Global IT services leader", "Public company", "Tata Group subsidiary"]
+    },
+    "infosys": {
+        "name": "Infosys Limited",
+        "fraud_score": 6,
+        "reports": 3,
+        "last_updated": "2024-01-15",
+        "domain_age": "25+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "IT Services",
+        "location": "Bangalore, India",
+        "website": "infosys.com",
+        "green_flags": ["IT consulting leader", "Public company", "Global delivery model"]
+    },
+    "wipro": {
+        "name": "Wipro Limited",
+        "fraud_score": 7,
+        "reports": 3,
+        "last_updated": "2024-01-15",
+        "domain_age": "25+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "IT Services",
+        "location": "Bangalore, India",
+        "website": "wipro.com",
+        "green_flags": ["IT services provider", "Public company", "Global operations"]
+    },
+    "accenture": {
+        "name": "Accenture",
+        "fraud_score": 8,
+        "reports": 4,
+        "last_updated": "2024-01-15",
+        "domain_age": "20+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Consulting",
+        "location": "Dublin, Ireland",
+        "website": "accenture.com",
+        "green_flags": ["Global consulting leader", "Public company", "Fortune 500"]
+    },
+    "deloitte": {
+        "name": "Deloitte",
+        "fraud_score": 6,
+        "reports": 2,
+        "last_updated": "2024-01-15",
+        "domain_age": "30+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Consulting",
+        "location": "London, UK",
+        "website": "deloitte.com",
+        "green_flags": ["Big Four consulting", "Global presence", "Professional services leader"]
+    },
+    "jpmorgan": {
+        "name": "JPMorgan Chase",
+        "fraud_score": 8,
+        "reports": 5,
+        "last_updated": "2024-01-15",
+        "domain_age": "25+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Banking",
+        "location": "New York, NY",
+        "website": "jpmorganchase.com",
+        "green_flags": ["Major bank", "Fortune 500", "Regulated financial institution"]
+    },
+    "goldman": {
+        "name": "Goldman Sachs",
+        "fraud_score": 9,
+        "reports": 4,
+        "last_updated": "2024-01-15",
+        "domain_age": "25+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Investment Banking",
+        "location": "New York, NY",
+        "website": "goldmansachs.com",
+        "green_flags": ["Investment banking leader", "Public company", "Global financial services"]
+    },
+    "mckinsey": {
+        "name": "McKinsey & Company",
+        "fraud_score": 7,
+        "reports": 3,
+        "last_updated": "2024-01-15",
+        "domain_age": "30+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Management Consulting",
+        "location": "New York, NY",
+        "website": "mckinsey.com",
+        "green_flags": ["Top consulting firm", "Global presence", "Elite reputation"]
+    },
+    "pwc": {
+        "name": "PricewaterhouseCoopers",
+        "fraud_score": 6,
+        "reports": 2,
+        "last_updated": "2024-01-15",
+        "domain_age": "30+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Professional Services",
+        "location": "London, UK",
+        "website": "pwc.com",
+        "green_flags": ["Big Four accounting", "Global network", "Professional services leader"]
+    },
+    "ey": {
+        "name": "Ernst & Young",
+        "fraud_score": 7,
+        "reports": 3,
+        "last_updated": "2024-01-15",
+        "domain_age": "30+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Professional Services",
+        "location": "London, UK",
+        "website": "ey.com",
+        "green_flags": ["Big Four accounting", "Global operations", "Professional excellence"]
+    },
+    "kpmg": {
+        "name": "KPMG",
+        "fraud_score": 6,
+        "reports": 2,
+        "last_updated": "2024-01-15",
+        "domain_age": "30+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Professional Services",
+        "location": "Amstelveen, Netherlands",
+        "website": "kpmg.com",
+        "green_flags": ["Big Four accounting", "Global network", "Audit and advisory leader"]
+    },
+    "cisco": {
+        "name": "Cisco Systems",
+        "fraud_score": 5,
+        "reports": 1,
+        "last_updated": "2024-01-15",
+        "domain_age": "30+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Networking",
+        "location": "San Jose, CA",
+        "website": "cisco.com",
+        "green_flags": ["Networking technology leader", "Public company", "Global infrastructure"]
+    },
+    "vmware": {
+        "name": "VMware",
+        "fraud_score": 8,
+        "reports": 3,
+        "last_updated": "2024-01-15",
+        "domain_age": "25+ years",
+        "social_media": "Extensive presence",
+        "contact_verification": "Verified",
+        "industry": "Software",
+        "location": "Palo Alto, CA",
+        "website": "vmware.com",
+        "green_flags": ["Virtualization leader", "Enterprise software", "Strong technology focus"]
     }
 }
 
 # Multi-language support
 LANGUAGES = {
     'en': {
-        'title': 'InternshipGuardian Pro - Advanced Internship Fraud Detection',
+        'title': 'Sniftern - Advanced Internship Fraud Detection',
         'tagline': 'Advanced AI-Powered Internship Fraud Detection & Company Verification',
         'job_detection': 'Internship Detection',
         'company_search': 'Company Search',
@@ -127,7 +710,7 @@ LANGUAGES = {
         'search_btn': 'Search',
         'results': 'Analysis Results',
         'company_info': 'Company Information',
-        'footer_copyright': '© 2024 InternshipGuardian Pro. Built with advanced AI and machine learning.',
+        'footer_copyright': '© 2024 Sniftern. Built with advanced AI and machine learning.',
         'disclaimer': '⚠️ This tool is for educational purposes. Always verify internship postings through official channels.',
         'analyzing': 'Analyzing...',
         'likely_fake': 'Likely FAKE ❌',
@@ -263,33 +846,31 @@ def index():
     return render_template('index.html', lang=lang, translations=LANGUAGES.get(lang, LANGUAGES['en']))
 
 @app.route('/detect', methods=['POST'])
-def detect_internship():
+def detect_fraud():
+    """Detect fraud in job posting text"""
     try:
         data = request.get_json()
-        text = data.get('text', '')
+        text = data.get('text', '').strip()
         
-        if not text.strip():
+        if not text:
             return jsonify({'error': 'No text provided'}), 400
         
-        # Get prediction with pattern analysis
-        result, confidence_score, icon, pattern_matches = predictor.get_prediction_result(text)
+        # Perform fraud detection
+        result = predictor.enhanced_predict(text)
         
-        # AI-Powered Features
-        salary_analysis = predictor.analyze_salary_range(text)
-        job_quality_score = predictor.analyze_internship_description_quality(text)
-        interview_analysis = predictor.analyze_interview_process(text)
-        
-        return jsonify({
-            'result': result,
-            'confidence_score': round(confidence_score, 1),
-            'icon': icon,
-            'pattern_matches': pattern_matches,
-            'word_count': len(text.split()),
-            'salary_analysis': salary_analysis,
-            'internship_quality_score': job_quality_score,
-            'interview_analysis': interview_analysis
+        # Add to analytics dashboard
+        analytics_dashboard.add_analysis_data({
+            'result': result['result'],
+            'confidence_score': result['confidence_score'],
+            'word_count': result['word_count'],
+            'pattern_matches': result.get('pattern_matches', []),
+            'source': 'manual',
+            'company': 'unknown',
+            'location': 'unknown',
+            'industry': 'unknown'
         })
-    
+        
+        return jsonify(result)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -361,46 +942,96 @@ def extract_url():
 
 @app.route('/analyze_linkedin', methods=['POST'])
 def analyze_linkedin():
+    """Analyze LinkedIn job posting"""
     try:
         data = request.get_json()
-        linkedin_url = data.get('linkedin_url', '')
-        
+        linkedin_url = data.get('linkedin_url', '').strip()
+
         if not linkedin_url:
             return jsonify({'error': 'No LinkedIn URL provided'}), 400
-        
+
         # Validate LinkedIn URL
         if 'linkedin.com/jobs' not in linkedin_url:
-            return jsonify({'error': 'Please provide a valid LinkedIn job posting URL'}), 400
-        
-        # Extract text from LinkedIn job posting with enhanced scraping
-        extracted_text = extract_linkedin_job_content(linkedin_url)
-        
-        if extracted_text:
-            # Get prediction with pattern analysis
-            result, confidence_score, icon, pattern_matches = predictor.get_prediction_result(extracted_text)
-            
-            # AI-Powered Features
-            salary_analysis = predictor.analyze_salary_range(extracted_text)
-            job_quality_score = predictor.analyze_internship_description_quality(extracted_text)
-            interview_analysis = predictor.analyze_interview_process(extracted_text)
-            
+            return jsonify({'error': 'Invalid LinkedIn job URL. Please provide a valid LinkedIn job posting URL.'}), 400
+
+        # Extract content from LinkedIn using enhanced scraping
+        from scraping_utils import extract_job_content_enhanced
+
+        # Try enhanced extraction first
+        extracted_text = extract_job_content_enhanced(linkedin_url)
+
+        # Fallback to original method if enhanced fails
+        if not extracted_text:
+            extracted_text = extract_linkedin_job_content(linkedin_url)
+
+        if not extracted_text:
             return jsonify({
-                'success': True,
-                'result': result,
-                'confidence_score': round(confidence_score, 1),
-                'icon': icon,
-                'pattern_matches': pattern_matches,
-                'word_count': len(extracted_text.split()),
-                'salary_analysis': salary_analysis,
-                'internship_quality_score': job_quality_score,
-                'interview_analysis': interview_analysis,
-                'source': 'LinkedIn'
-            })
-        else:
-            return jsonify({'error': 'Could not extract text from LinkedIn URL. LinkedIn may have blocked automated access.'}), 400
-    
+                'error': 'LinkedIn Anti-Bot Protection Detected',
+                'message': 'LinkedIn has sophisticated anti-bot protection that prevents automated content extraction.',
+                'suggestions': [
+                    'Copy the job description text manually and paste it in the main text analysis box',
+                    'Use the "Paste Job Description" option instead',
+                    'Try again later as LinkedIn may temporarily block automated requests'
+                ],
+                'alternative': 'Use the main text analysis feature by copying and pasting the job description directly'
+            }), 400
+
+        # Perform prediction
+        result = predictor.enhanced_predict(extracted_text)
+
+        # Add AI analysis
+        result['salary_analysis'] = predictor.analyze_salary_range(extracted_text)
+        result['internship_quality_score'] = predictor.analyze_internship_description_quality(extracted_text)
+        result['interview_analysis'] = predictor.analyze_interview_process(extracted_text)
+
+        # Add to analytics dashboard
+        analytics_dashboard.add_analysis_data({
+            'result': result['result'],
+            'confidence_score': result['confidence_score'],
+            'word_count': result['word_count'],
+            'pattern_matches': result.get('pattern_matches', []),
+            'source': 'LinkedIn',
+            'company': 'unknown',  # Could extract from URL
+            'location': 'unknown',  # Could extract from URL
+            'industry': 'unknown'   # Could extract from URL
+        })
+
+        return jsonify(result)
     except Exception as e:
-        return jsonify({'error': f'LinkedIn analysis failed: {str(e)}'}), 500
+        print(f"LinkedIn analysis error: {str(e)}")
+        return jsonify({'error': f'Network error: {str(e)}. Please check your connection and try again.'}), 500
+
+@app.route('/test_linkedin_extraction', methods=['POST'])
+def test_linkedin_extraction():
+    """Test LinkedIn URL extraction without full analysis"""
+    try:
+        data = request.get_json()
+        linkedin_url = data.get('linkedin_url', '').strip()
+
+        if not linkedin_url:
+            return jsonify({'error': 'No LinkedIn URL provided'}), 400
+
+        # Validate LinkedIn URL
+        if 'linkedin.com/jobs' not in linkedin_url:
+            return jsonify({'error': 'Invalid LinkedIn job URL. Please provide a valid LinkedIn job posting URL.'}), 400
+
+        # Test extraction
+        from scraping_utils import extract_job_content_enhanced
+        enhanced_text = extract_job_content_enhanced(linkedin_url)
+        fallback_text = extract_linkedin_job_content(linkedin_url)
+
+        return jsonify({
+            'url': linkedin_url,
+            'enhanced_extraction_length': len(enhanced_text) if enhanced_text else 0,
+            'enhanced_preview': enhanced_text[:200] + '...' if enhanced_text and len(enhanced_text) > 200 else enhanced_text,
+            'fallback_extraction_length': len(fallback_text) if fallback_text else 0,
+            'fallback_preview': fallback_text[:200] + '...' if fallback_text and len(fallback_text) > 200 else fallback_text,
+            'success': bool(enhanced_text or fallback_text)
+        })
+
+    except Exception as e:
+        print(f"LinkedIn test error: {str(e)}")
+        return jsonify({'error': f'Test failed: {str(e)}'}), 500
 
 @app.route('/analyze_indeed', methods=['POST'])
 def analyze_indeed():
@@ -430,7 +1061,7 @@ def analyze_indeed():
             return jsonify({
                 'success': True,
                 'result': result,
-                'confidence_score': round(confidence_score, 1),
+                'confidence_score': round(min(100, max(0, confidence_score)), 1),
                 'icon': icon,
                 'pattern_matches': pattern_matches,
                 'word_count': len(extracted_text.split()),
@@ -473,7 +1104,7 @@ def analyze_glassdoor():
             return jsonify({
                 'success': True,
                 'result': result,
-                'confidence_score': round(confidence_score, 1),
+                'confidence_score': round(min(100, max(0, confidence_score)), 1),
                 'icon': icon,
                 'pattern_matches': pattern_matches,
                 'word_count': len(extracted_text.split()),
@@ -496,95 +1127,156 @@ def export_pdf():
         
         # Create PDF report
         buffer = io.BytesIO()
-        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        doc = SimpleDocTemplate(buffer, pagesize=letter,
+                              leftMargin=50, rightMargin=50,
+                              topMargin=50, bottomMargin=50)
         styles = getSampleStyleSheet()
         story = []
-        
-        # Title
+
+        # Enhanced Title with branding
         title_style = ParagraphStyle(
             'CustomTitle',
             parent=styles['Heading1'],
-            fontSize=24,
-            spaceAfter=30,
-            alignment=1
+            fontSize=28,
+            spaceAfter=10,
+            alignment=1,
+            textColor=colors.HexColor('#2563eb'),
+            fontName='Helvetica-Bold'
         )
-        story.append(Paragraph("InternshipGuardian Pro - Analysis Report", title_style))
+
+        subtitle_style = ParagraphStyle(
+            'CustomSubtitle',
+            parent=styles['Normal'],
+            fontSize=14,
+            spaceAfter=30,
+            alignment=1,
+            textColor=colors.HexColor('#64748b'),
+            fontName='Helvetica'
+        )
+
+        story.append(Paragraph("🔍 Sniftern", title_style))
+        story.append(Paragraph("Advanced Internship Fraud Detection Report", subtitle_style))
         story.append(Spacer(1, 20))
         
-        # Analysis Results
-        story.append(Paragraph("Analysis Results", styles['Heading2']))
+        # Enhanced Analysis Results Section
+        section_style = ParagraphStyle(
+            'SectionHeader',
+            parent=styles['Heading2'],
+            fontSize=18,
+            spaceAfter=15,
+            textColor=colors.HexColor('#1e40af'),
+            fontName='Helvetica-Bold'
+        )
+
+        story.append(Paragraph("📊 Analysis Results", section_style))
         story.append(Spacer(1, 12))
-        
+
+        # Determine result color based on analysis
+        result_text = analysis_data.get('result', 'N/A')
+        result_color = colors.HexColor('#dc2626') if 'FAKE' in result_text.upper() else colors.HexColor('#16a34a')
+
         result_data = [
             ['Metric', 'Value'],
-            ['Result', analysis_data.get('result', 'N/A')],
+            ['Detection Result', analysis_data.get('result', 'N/A')],
             ['Confidence Score', f"{analysis_data.get('confidence_score', 0)}%"],
-            ['Words Analyzed', analysis_data.get('word_count', 0)],
-            ['Patterns Detected', len(analysis_data.get('pattern_matches', []))]
+            ['Words Analyzed', str(analysis_data.get('word_count', 0))],
+            ['Suspicious Patterns', str(len(analysis_data.get('pattern_matches', [])))]
         ]
-        
-        result_table = Table(result_data)
+
+        result_table = Table(result_data, colWidths=[200, 200])
         result_table.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#2563eb')),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
             ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, 0), 14),
+            ('FONTSIZE', (0, 0), (-1, 0), 12),
+            ('FONTSIZE', (0, 1), (-1, -1), 11),
             ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-            ('GRID', (0, 0), (-1, -1), 1, colors.black)
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f8fafc')),
+            ('TEXTCOLOR', (1, 1), (1, 1), result_color),  # Color the result cell
+            ('FONTNAME', (1, 1), (1, 1), 'Helvetica-Bold'),  # Bold the result
+            ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#e2e8f0')),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')
         ]))
         story.append(result_table)
-        story.append(Spacer(1, 20))
+        story.append(Spacer(1, 25))
         
-        # AI Analysis
+        # Enhanced AI Analysis Section
         if 'salary_analysis' in analysis_data:
-            story.append(Paragraph("AI-Powered Analysis", styles['Heading2']))
+            story.append(Paragraph("🤖 AI-Powered Deep Analysis", section_style))
             story.append(Spacer(1, 12))
-            
+
             ai_data = [
-                ['Analysis Type', 'Result'],
+                ['Analysis Category', 'Assessment'],
                 ['Salary Analysis', analysis_data.get('salary_analysis', 'N/A')],
                 ['Internship Quality Score', analysis_data.get('internship_quality_score', 'N/A')],
-                ['Interview Analysis', analysis_data.get('interview_analysis', 'N/A')]
+                ['Interview Process Analysis', analysis_data.get('interview_analysis', 'N/A')]
             ]
-            
-            ai_table = Table(ai_data)
+
+            ai_table = Table(ai_data, colWidths=[200, 300])
             ai_table.setStyle(TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
-                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#059669')),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 14),
+                ('FONTSIZE', (0, 0), (-1, 0), 12),
+                ('FONTSIZE', (0, 1), (-1, -1), 10),
                 ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black)
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 1), (-1, -1), 8),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.HexColor('#f0fdf4')),
+                ('GRID', (0, 0), (-1, -1), 1, colors.HexColor('#d1fae5')),
+                ('VALIGN', (0, 0), (-1, -1), 'TOP')
             ]))
             story.append(ai_table)
-            story.append(Spacer(1, 20))
+            story.append(Spacer(1, 25))
         
-        # Patterns Detected
+        # Enhanced Patterns Section
         if analysis_data.get('pattern_matches'):
-            story.append(Paragraph("Suspicious Patterns Detected", styles['Heading2']))
+            story.append(Paragraph("⚠️ Suspicious Patterns Detected", section_style))
             story.append(Spacer(1, 12))
-            
-            for pattern in analysis_data['pattern_matches']:
-                story.append(Paragraph(f"• {pattern}", styles['Normal']))
-            
-            story.append(Spacer(1, 20))
+
+            pattern_style = ParagraphStyle(
+                'PatternStyle',
+                parent=styles['Normal'],
+                fontSize=11,
+                spaceAfter=8,
+                leftIndent=20,
+                textColor=colors.HexColor('#dc2626'),
+                fontName='Helvetica'
+            )
+
+            for i, pattern in enumerate(analysis_data['pattern_matches'], 1):
+                story.append(Paragraph(f"{i}. {pattern}", pattern_style))
+
+            story.append(Spacer(1, 25))
         
-        # Footer
-        story.append(Paragraph("Generated by InternshipGuardian Pro", styles['Normal']))
-        story.append(Paragraph(f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", styles['Normal']))
-        story.append(Paragraph("⚠️ This report is for educational purposes only.", styles['Normal']))
-        
+        # Enhanced Footer
+        story.append(Spacer(1, 30))
+
+        footer_style = ParagraphStyle(
+            'Footer',
+            parent=styles['Normal'],
+            fontSize=10,
+            alignment=1,
+            textColor=colors.HexColor('#64748b'),
+            spaceAfter=5
+        )
+
+        story.append(Paragraph("Generated by Sniftern - Advanced Fraud Detection System", footer_style))
+        story.append(Paragraph(f"Report Date: {datetime.now().strftime('%B %d, %Y at %I:%M %p')}", footer_style))
+        story.append(Paragraph("⚠️ This report is for educational and informational purposes only.", footer_style))
+        story.append(Paragraph("Always verify internship postings through official company channels.", footer_style))
+
         doc.build(story)
         buffer.seek(0)
-        
+
         return send_file(
             buffer,
             as_attachment=True,
-            download_name=f"internshipguardian_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+            download_name=f"sniftern_analysis_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
             mimetype='application/pdf'
         )
     
@@ -593,23 +1285,36 @@ def export_pdf():
 
 # Platform-specific scraping functions
 def extract_linkedin_job_content(url):
-    """Enhanced LinkedIn job content extraction"""
+    """Enhanced LinkedIn job content extraction with better error handling"""
     try:
+        import time
+        import random
+
+        # More comprehensive headers to avoid detection
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Accept-Encoding': 'gzip, deflate',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate, br',
             'Connection': 'keep-alive',
             'Upgrade-Insecure-Requests': '1',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Cache-Control': 'max-age=0',
+            'Referer': 'https://www.linkedin.com/'
         }
-        
-        response = requests.get(url, headers=headers, timeout=15)
+
+        # Add random delay to avoid rate limiting
+        time.sleep(random.uniform(1, 3))
+
+        # Make request with longer timeout
+        response = requests.get(url, headers=headers, timeout=30)
         response.raise_for_status()
-        
+
         soup = BeautifulSoup(response.content, 'html.parser')
-        
-        # LinkedIn job posting selectors (may need updates as LinkedIn changes)
+
+        # Updated LinkedIn job posting selectors
         job_selectors = [
             '.job-description',
             '.show-more-less-html__markup',
@@ -617,35 +1322,50 @@ def extract_linkedin_job_content(url):
             '[data-job-description]',
             '.job-description__text',
             '.description__text',
-            '.job-description-content'
+            '.job-description-content',
+            '.job-description__content--rich-text',
+            '.jobs-description__content',
+            '.jobs-description-content__text',
+            '.jobs-box__html-content'
         ]
-        
+
         job_text = ""
         for selector in job_selectors:
             elements = soup.select(selector)
             if elements:
                 job_text = ' '.join([elem.get_text(strip=True) for elem in elements])
-                break
-        
-        # Fallback: try to find any text content
-        if not job_text:
-            # Remove navigation, footer, and other non-content elements
-            for element in soup(['nav', 'footer', 'header', 'script', 'style', 'aside']):
-                element.decompose()
-            
-            # Try to extract main content
-            main_content = soup.find('main') or soup.find('article') or soup.find('div', class_='main')
-            if main_content:
-                job_text = main_content.get_text(strip=True)
-            else:
-                job_text = soup.get_text(strip=True)
-        
+                if len(job_text) > 50:  # Ensure we got meaningful content
+                    break
+
+        # Enhanced fallback: try multiple content extraction strategies
+        if not job_text or len(job_text) < 50:
+            # Strategy 1: Look for job-related divs
+            job_divs = soup.find_all('div', class_=lambda x: x and ('job' in x.lower() or 'description' in x.lower()))
+            if job_divs:
+                job_text = ' '.join([div.get_text(strip=True) for div in job_divs[:3]])
+
+            # Strategy 2: Look for main content areas
+            if not job_text or len(job_text) < 50:
+                main_selectors = ['main', 'article', '[role="main"]', '.main-content', '#main-content']
+                for selector in main_selectors:
+                    main_content = soup.select_one(selector)
+                    if main_content:
+                        # Remove unwanted elements
+                        for element in main_content(['nav', 'footer', 'header', 'script', 'style', 'aside', '.ad']):
+                            element.decompose()
+                        job_text = main_content.get_text(strip=True)
+                        if len(job_text) > 50:
+                            break
+
         # Clean and return text
-        if job_text:
+        if job_text and len(job_text) > 20:
             return clean_extracted_text(job_text)
         else:
             return ""
-            
+
+    except requests.exceptions.RequestException as e:
+        print(f"LinkedIn network error: {str(e)}")
+        return ""
     except Exception as e:
         print(f"LinkedIn extraction error: {str(e)}")
         return ""
@@ -790,6 +1510,111 @@ def clean_extracted_text(text):
     text = ' '.join(text.split())
     
     return text
+
+@app.route('/analytics')
+def analytics_page():
+    """Analytics dashboard page"""
+    return render_template('analytics.html')
+
+@app.route('/api/analytics/dashboard', methods=['GET'])
+def get_analytics_dashboard():
+    """Get analytics dashboard data"""
+    try:
+        # Generate dashboard report
+        dashboard_report = analytics_dashboard.generate_dashboard_report()
+        
+        # Create visualizations
+        visualizations = analytics_dashboard.create_visualizations()
+        
+        return jsonify({
+            'success': True,
+            'dashboard_data': dashboard_report,
+            'visualizations': visualizations
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/analytics/market-intelligence', methods=['GET'])
+def get_market_intelligence():
+    """Get market intelligence report"""
+    try:
+        # Convert analytics data to job data format for market intelligence
+        job_data = []
+        for data in analytics_dashboard.analytics_data:
+            job_data.append({
+                'title': data.get('result', {}).get('title', 'Unknown'),
+                'company': data.get('result', {}).get('company', 'Unknown'),
+                'location': data.get('result', {}).get('location', 'Unknown'),
+                'industry': data.get('result', {}).get('industry', 'Unknown'),
+                'is_fraud': data.get('is_fraud', False),
+                'pattern_matches': data.get('pattern_matches', []),
+                'posted_date': data.get('timestamp', ''),
+                'salary_analysis': data.get('result', {}).get('salary_analysis', ''),
+                'description': data.get('result', {}).get('description', '')
+            })
+        
+        # Generate market intelligence report
+        market_report = market_intelligence.generate_market_report(job_data)
+        
+        # Check for alerts
+        alerts = alert_system.check_alerts(market_report)
+        
+        return jsonify({
+            'success': True,
+            'market_intelligence': market_report,
+            'alerts': alerts
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/analytics/blockchain-verification', methods=['POST'])
+def verify_with_blockchain():
+    """Verify job posting or company with blockchain"""
+    try:
+        data = request.get_json()
+        verification_type = data.get('type', 'job_posting')
+        
+        if verification_type == 'job_posting':
+            verification_result = blockchain_verifier.verify_job_posting(data.get('job_data', {}))
+        elif verification_type == 'company':
+            verification_result = blockchain_verifier.verify_company_credentials(data.get('company_data', {}))
+        else:
+            return jsonify({
+                'success': False,
+                'error': 'Invalid verification type'
+            }), 400
+        
+        return jsonify({
+            'success': True,
+            'verification_result': verification_result
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+
+@app.route('/api/analytics/verification-history/<identifier>', methods=['GET'])
+def get_verification_history(identifier):
+    """Get verification history for a specific identifier"""
+    try:
+        history = blockchain_verifier.get_verification_history(identifier)
+        
+        return jsonify({
+            'success': True,
+            'verification_history': history
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000) 

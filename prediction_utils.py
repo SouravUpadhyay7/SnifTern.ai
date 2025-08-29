@@ -52,7 +52,10 @@ class FakeJobPredictor:
             else:  # Fake
                 confidence_score = proba[1] * 100
                 is_fake = True
-            
+
+            # Ensure confidence_score is within bounds
+            confidence_score = min(100, max(0, confidence_score))
+
             return prediction, confidence_score, is_fake
             
         except Exception as e:
